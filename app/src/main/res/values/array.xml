@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources><string-array name="sections">
+    <item >My First Password</item>
+    <item >My Next Password</item>
+    <item >Your Password</item>
+    <item >Our Password</item>
+    <item >Nobody\'s Password</item>
+    <item >aaaaaaaaaaaaaa</item>
+    <item >VEEEEEEEEEERYYYYYYYYY LLLLLLOOOOOOOONNNNNNGGGGG NNNNNAAAMMMMMEEE</item>
+    <item >Another Password</item>
+    <item >And One More</item>
+    <item >Yet another one</item>
+    <item >And that would be final</item>
+</string-array></resources>

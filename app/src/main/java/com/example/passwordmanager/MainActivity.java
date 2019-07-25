@@ -2,18 +2,21 @@ package com.example.passwordmanager;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.View;
 
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.CheckBox;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -27,13 +30,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends Activity  implements AdapterView.OnItemClickListener {
-    Button b1,b2,b3;
-    String currentPath;
+public class MainActivity extends Activity  implements AdapterView.OnClickListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener{
+    Button newDirectoryButton, newPasswordButton, logoutButton, higherDirectory;
+    String currentPath, masterPassword;
+    CheckBox showPassword;
+    JSONArray database;
     public static String convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
@@ -50,43 +56,89 @@ public class MainActivity extends Activity  implements AdapterView.OnItemClickLi
         return sb.toString();
     }
 
+    public JSONArray getDirectory(String path) throws JSONException {
+        if (path.equals("/")) return database;
+        String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
+        JSONArray directory = database;
+        for (String directoryName : pathArray){
+            for (int i = 0; i < directory.length(); i++){
+                JSONObject item = directory.getJSONObject(i);
+                if (item.optString("type").equals("directory") && item.optString("name").equals(directoryName)){
+                    directory = item.getJSONArray("data");
+                    break;
+                }
+            }
+        }
+        return directory;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (currentPath.equals("/")){
+            return;
+        }else{
+            try {
+                String[] pathArray = Arrays.copyOfRange(currentPath.split("/"), 0, currentPath.split("/").length - 1);
+                currentPath = String.join("/", pathArray);
+                JSONArray subdirectory = getDirectory(currentPath);
+                arrayOfItems.clear();
+                populateList(arrayOfItems, subdirectory);
+                ListView listView = (ListView) findViewById(R.id.listView1);
+                ListableItemsAdapter adapter = new ListableItemsAdapter(getApplicationContext(), arrayOfItems);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(this);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void onItemClick(AdapterView<?> l, View v, int position, long id) {
         Intent intent = new Intent();
-        intent.setClass(this, ListableItem.class);
-        intent.putExtra("position", position);
-        intent.putExtra("id", id);
-        intent.putExtra("path", currentPath + "/" +v.findViewById(R.id.name));
+        String name = ((TextView) v.findViewById(R.id.name)).getText().toString();
+        String type = ((TextView) v.findViewById(R.id.type)).getText().toString();
+        if (type.equals("password")){
+            //display password
+        } else {
+            //change directory
+            try {
+                currentPath = currentPath + name + "/";
+                JSONArray subdirectory = getDirectory(currentPath);
+                arrayOfItems.clear();
+                populateList(arrayOfItems, subdirectory);
+                ListView listView = (ListView) findViewById(R.id.listView1);
+                ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(this);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         //startActivity(intent);
     }
 
-    private String jsonTest = "[\n" +
-            "\t{\n" +
-            "\t\"type\": \"password\",\n" +
-            "\t\"name\": \"moje pijrwsze hasło\",\n" +
-            "\t\"data\": \"haslo1234\"\n" +
-            "\t},\n" +
-            "\t{\n" +
-            "\t\"type\": \"directory\",\n" +
-            "\t\"name\": \"mój pierwszy katalog\",\n" +
-            "\t\"data\":[\n" +
-            "\t\t\t{\n" +
-            "\t\t\t\"type\": \"password\",\n" +
-            "\t\t\t\"name\": \"hasło do pentagonu\",\n" +
-            "\t\t\t\"data\": \"asdffdsa@\"\n" +
-            "\t\t\t},\n" +
-            "\t\t\t{\n" +
-            "\t\t\t\"type\": \"password\",\n" +
-            "\t\t\t\"name\": \"hasło do konta bankowego\",\n" +
-            "\t\t\t\"data\": \"a1!@#$%^&*\\\\\"\n" +
-            "\t\t\t},\n" +
-            "\t\t\t{\n" +
-            "\t\t\t\"type\": \"directory\",\n" +
-            "\t\t\t\"name\": \"zagnieżdżony, pusty katlog\",\n" +
-            "\t\t\t\"data\": []\n" +
-            "\t\t\t}\n" +
-            "\t\t]\n" +
-            "\t}\n" +
-            "]";
+    public boolean onItemLongClick(AdapterView<?> arg0, View v,
+                                   int position, long id) {
+        Intent intent = new Intent();
+        String name = ((TextView) v.findViewById(R.id.name)).getText().toString();
+        String type = ((TextView) v.findViewById(R.id.type)).getText().toString();
+        intent.putExtra("position", position);
+        intent.putExtra("id", id);
+        intent.putExtra("path", currentPath);
+        intent.putExtra("name", name);
+        intent.putExtra("database", database.toString());
+        intent.putExtra("operation_type", "edit");
+        if (type.equals("password")){
+            //edit password
+            intent.setClass(this, EditPasswordActivity.class);
+        } else {
+            //edit directory
+            intent.setClass(this, EditDirectoryActivity.class);
+        }
+        startActivity(intent);
+        return true;
+    }
+
 
     public void sendMessage(View view) {
         Intent intent = new Intent(this, LoginActivity.class);
@@ -116,13 +168,18 @@ public class MainActivity extends Activity  implements AdapterView.OnItemClickLi
 
         try{
             String file = "filename";
-            FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
-            fOut.write(jsonTest.getBytes());
             FileInputStream fin = openFileInput(file);
             String temp = convertStreamToString(fin);
-            JSONArray jsonMainNode = new JSONArray(temp);
+            database = new JSONArray(temp);
             fin.close();
-            populateList(arrayOfItems, jsonMainNode);
+            populateList(arrayOfItems, database);
+            ListView listView = (ListView) findViewById(R.id.listView1);
+            ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
+            //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
+            listView.setAdapter(adapter);
+            //ListView listview = (ListView) findViewById(R.id.listView1);
+            listView.setOnItemClickListener(this);
+            listView.setOnItemLongClickListener(this);
         }
         catch(JSONException e){
             Toast.makeText(getApplicationContext(), "Error"+e.toString(), Toast.LENGTH_SHORT).show();
@@ -139,6 +196,33 @@ public class MainActivity extends Activity  implements AdapterView.OnItemClickLi
         return employeeNameNo;
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        try {
+            String file = "filename";
+            FileInputStream fin = openFileInput(file);
+            String temp = convertStreamToString(fin);
+            database = new JSONArray(temp);
+            fin.close();
+            JSONArray subdirectory = getDirectory(currentPath);
+            arrayOfItems.clear();
+            populateList(arrayOfItems, subdirectory);
+            ListView listView = (ListView) findViewById(R.id.listView1);
+            ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
+            //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
+            listView.setAdapter(adapter);
+            //ListView listview = (ListView) findViewById(R.id.listView1);
+            listView.setOnItemClickListener(this);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,57 +231,48 @@ public class MainActivity extends Activity  implements AdapterView.OnItemClickLi
         setContentView(R.layout.activity_main);
 
         initList();
-        ListView listView = (ListView) findViewById(R.id.listView1);
-        ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
-        //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
-        listView.setAdapter(adapter);
-        //ListView listview = (ListView) findViewById(R.id.listView1);
-        listView.setOnItemClickListener(this);
 
-        b1 = (Button)findViewById(R.id.button1);
-        b2 = (Button)findViewById(R.id.button2);
-        b3 = (Button)findViewById(R.id.button3);
-
+        newDirectoryButton = (Button)findViewById(R.id.button1);
+        newPasswordButton = (Button)findViewById(R.id.button2);
+        logoutButton = (Button)findViewById(R.id.button3);
+        higherDirectory = (Button)findViewById(R.id.button4);
         currentPath = "/";
-        //tx1 = (TextView)findViewById(R.id.textView3);
-        //tx1.setVisibility(View.GONE);
+        Bundle bundle = getIntent().getExtras();
+        masterPassword = bundle.getString("master-password");
 
-        b1.setOnClickListener(new View.OnClickListener() {
+
+        newDirectoryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendMessage(v);
-                /*if(ed1.getText().toString().equals("admin") &&
-                        ed2.getText().toString().equals("admin")) {
-                    Toast.makeText(getApplicationContext(),
-                            "Redirecting...",Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(getApplicationContext(), "Wrong Credentials", Toast.LENGTH_SHORT).show();
-
-                            //tx1.setVisibility(View.VISIBLE);
-                    //tx1.setBackgroundColor(Color.RED);
-                    counter--;
-                    //tx1.setText(Integer.toString(counter));
-
-                    if (counter == 0) {
-                        b1.setEnabled(false);
-                    }
-                }*/
+                Intent intent = new Intent();
+                intent.putExtra("operation_type", "new");
+                intent.putExtra("path", currentPath);
+                intent.putExtra("database", database.toString());
+                intent.setClass(getApplicationContext(), EditDirectoryActivity.class);
+                startActivity(intent);
             }
         });
 
 
-        b2.setOnClickListener(new View.OnClickListener() {
+        newPasswordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                Intent intent = new Intent();
+                intent.putExtra("operation_type", "new");
+                intent.putExtra("path", currentPath);
+                intent.putExtra("database", database.toString());
+                intent.setClass(getApplicationContext(), EditPasswordActivity.class);
+                startActivity(intent);
             }
         });
 
-        b3.setOnClickListener(new View.OnClickListener() {
+        logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
             }
         });
+
+        higherDirectory.setOnClickListener(this);
     }
 }

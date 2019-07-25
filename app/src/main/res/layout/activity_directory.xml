@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:text="Edit/Add Password"
+        android:text="Edit/Add Directory"
         android:textSize="35dp" />
 
     <!--TextView
@@ -40,7 +40,7 @@
         android:layout_marginEnd="9dp"
         android:layout_marginRight="9dp"
         android:focusable="true"
-        android:hint="Password name"
+        android:hint='"Name"'
         android:textColorHighlight="#ff7eff15"
         android:textColorHint="#808080" />
 
@@ -75,38 +75,18 @@
         android:textSize="25dp"
         android:layout_toRightOf="@+id/textview" /-->
 
-    <EditText
-        android:id="@+id/editText2"
-        android:layout_width="wrap_content"
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="347dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editText1"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="19dp"
-        android:layout_marginEnd="17dp"
-        android:layout_marginRight="17dp"
-        android:focusable="true"
-        android:hint="Password"
-        android:textColorHighlight="#ff7eff15"
-        android:textColorHint="#808080"
-        android:inputType="textPassword"/>
-
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="347dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/checkBox"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:layout_marginStart="56dp"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="41dp"
+        android:layout_marginTop="184dp"
         android:layout_marginEnd="51dp"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:text="save" />
@@ -126,22 +106,5 @@
         android:layout_marginEnd="56dp"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:text="@android:string/cancel" />
-
-    <CheckBox
-        android:id="@+id/checkBox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editText2"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="129dp"
-        android:layout_marginLeft="129dp"
-        android:layout_marginTop="47dp"
-        android:layout_marginEnd="135dp"
-        android:layout_marginRight="135dp"
-        android:checked="false"
-        android:text="Show password" />
 
 </RelativeLayout>

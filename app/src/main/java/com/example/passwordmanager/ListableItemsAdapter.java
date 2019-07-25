@@ -26,11 +26,13 @@ public class ListableItemsAdapter extends ArrayAdapter<ListableItem> {
         }
         // Lookup view for data population
         //TextView tvName = (TextView) convertView.findViewById(R.id.my_textview);
-        TextView tvName = (TextView) convertView.findViewById(R.id.name);
-        ImageView ivIcon = (ImageView) convertView.findViewById(R.id.imageView1);
+        TextView tvName = convertView.findViewById(R.id.name);
+        TextView tvType = convertView.findViewById(R.id.type);
+        ImageView ivIcon = convertView.findViewById(R.id.imageView1);
         // Populate the data into the template view using the data object
         //tvName.setText(user.name);
         tvName.setText(item.name);
+        tvType.setText(item.type);
         Log.i("LitableItemType", item.type);
         if (item.type.equals("directory")) {
             ivIcon.setImageResource(R.drawable.ic_directory);

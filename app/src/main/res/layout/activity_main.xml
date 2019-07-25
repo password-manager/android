@@ -99,13 +99,29 @@
 
     <Button
         android:id="@+id/button3"
-        android:layout_width="wrap_content"
+        android:layout_width="133dp"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="56dp"
-        android:layout_marginRight="56dp"
+        android:layout_marginEnd="40dp"
+        android:layout_marginRight="40dp"
         android:layout_marginBottom="40dp"
         android:text="Logout" />
+
+    <Button
+        android:id="@+id/button4"
+        android:layout_width="328dp"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/listView1"
+        android:layout_alignStart="@+id/listView1"
+        android:layout_alignLeft="@+id/listView1"
+        android:layout_alignEnd="@+id/listView1"
+        android:layout_alignRight="@+id/listView1"
+        android:layout_marginStart="4dp"
+        android:layout_marginLeft="4dp"
+        android:layout_marginEnd="-1dp"
+        android:layout_marginRight="-1dp"
+        android:layout_marginBottom="-71dp"
+        android:text="Exit directory" />
 </RelativeLayout>

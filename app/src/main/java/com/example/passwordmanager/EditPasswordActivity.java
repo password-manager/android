@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -96,11 +95,11 @@ public class EditPasswordActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create);
 
-        b1 = (Button)findViewById(R.id.button1);
-        b2 = (Button)findViewById(R.id.button2);
-        ed1 = (EditText)findViewById(R.id.editText1);
-        ed2 = (EditText)findViewById(R.id.editText2);
-        showPassword = (CheckBox)findViewById(R.id.checkBox);
+        b1 = (Button)findViewById(R.id.editPassword_saveButton);
+        b2 = (Button)findViewById(R.id.editPassword_cancelButton);
+        ed1 = (EditText)findViewById(R.id.editPassword_editName);
+        ed2 = (EditText)findViewById(R.id.editPassword_editPassword);
+        showPassword = (CheckBox)findViewById(R.id.editPassword_showPassword);
         Intent intent = getIntent();
         String databaseString = intent.getStringExtra("database");
         currentPath = intent.getStringExtra("path");
@@ -150,9 +149,9 @@ public class EditPasswordActivity extends Activity {
             public void onClick(View v) {
                 //is chkIos checked?
                 if (((CheckBox) v).isChecked()) {
-                    ((TextView) findViewById(R.id.editText2)).setTransformationMethod(null);
+                    ((TextView) findViewById(R.id.editPassword_editPassword)).setTransformationMethod(null);
                 } else {
-                    ((TextView) findViewById(R.id.editText2)).setTransformationMethod(new PasswordTransformationMethod());
+                    ((TextView) findViewById(R.id.editPassword_editPassword)).setTransformationMethod(new PasswordTransformationMethod());
                 }
             }
         });

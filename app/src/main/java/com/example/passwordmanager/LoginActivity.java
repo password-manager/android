@@ -57,7 +57,7 @@ public class LoginActivity extends Activity  {
         Log.i("LoginActivity.login", "Creating intent");
         Intent intent = new Intent(this, MainActivity.class);
         Log.i("LoginActivity.login", "Intent created");
-        EditText editText1 = (EditText) findViewById(R.id.editText1);
+        EditText editText1 = (EditText) findViewById(R.id.editPassword_editName);
         String password = editText1.getText().toString();
         intent.putExtra("master_password", password);
         startActivity(intent);
@@ -88,11 +88,11 @@ public class LoginActivity extends Activity  {
         }
 
 
-        b1 = (Button)findViewById(R.id.button1);
-        b2 = (Button)findViewById(R.id.button2);
-        b3 = (Button)findViewById(R.id.button3);
-        ed1 = (EditText)findViewById(R.id.editText1);
-        ed2 = (EditText)findViewById(R.id.editText2);
+        b1 = (Button)findViewById(R.id.editPassword_saveButton);
+        b2 = (Button)findViewById(R.id.editPassword_cancelButton);
+        b3 = (Button)findViewById(R.id.main_logoutButton);
+        ed1 = (EditText)findViewById(R.id.editPassword_editName);
+        ed2 = (EditText)findViewById(R.id.editPassword_editPassword);
 
         tx1 = (TextView)findViewById(R.id.textView2);
         tx1.setVisibility(View.GONE);

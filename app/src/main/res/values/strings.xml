@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">Password Manager</string>
+    <string name="manager_ShowPassword">show password</string>
+    <string name="manager_Save">save</string>
+    <string name="manager_EditPassword">EDIT PASSWORD</string>
+    <string name="manager_Password">password</string>
+    <string name="manager_PasswordName">password name</string>
+    <string name="manager_Cancel">cancel</string>
+    <string name="manager_EditDirectory">EDIT DIRECTORY</string>
+    <string name="manager_DirectoryName">directory name</string>
+    <string name="manager_StoredPasswords">STORED PASSWORDS</string>
+    <string name="manager_ExitDirectory" >exit directory</string>
+    <string name="manager_Logout">Logout</string>
+    <string name="manager_AddPassword">Add Password</string>
+    <string name="manager_AddDirectory">Add Directory</string>
+    <string name="manager_Register">REGISTER</string>
+    <string name="manager_EnterEmail">Enter your email</string>
+    <string name="manager_EnterPassword">Enter your master password</string>
+    <string name="manager_CancelButton">CANCEL</string>
+    <string name="manager_Login">LOGIN</string>
 </resources>

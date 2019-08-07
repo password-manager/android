@@ -2,10 +2,7 @@ package com.example.passwordmanager;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
 import android.view.View;
 
 import android.view.Window;
@@ -16,8 +13,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,7 +20,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -83,7 +77,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
                 JSONArray subdirectory = getDirectory(currentPath);
                 arrayOfItems.clear();
                 populateList(arrayOfItems, subdirectory);
-                ListView listView = (ListView) findViewById(R.id.listView1);
+                ListView listView = (ListView) findViewById(R.id.main_passwordsList);
                 ListableItemsAdapter adapter = new ListableItemsAdapter(getApplicationContext(), arrayOfItems);
                 listView.setAdapter(adapter);
                 listView.setOnItemClickListener(this);
@@ -106,7 +100,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
                 JSONArray subdirectory = getDirectory(currentPath);
                 arrayOfItems.clear();
                 populateList(arrayOfItems, subdirectory);
-                ListView listView = (ListView) findViewById(R.id.listView1);
+                ListView listView = (ListView) findViewById(R.id.main_passwordsList);
                 ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
                 listView.setAdapter(adapter);
                 listView.setOnItemClickListener(this);
@@ -173,7 +167,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             database = new JSONArray(temp);
             fin.close();
             populateList(arrayOfItems, database);
-            ListView listView = (ListView) findViewById(R.id.listView1);
+            ListView listView = (ListView) findViewById(R.id.main_passwordsList);
             ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
             //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
             listView.setAdapter(adapter);
@@ -208,7 +202,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             JSONArray subdirectory = getDirectory(currentPath);
             arrayOfItems.clear();
             populateList(arrayOfItems, subdirectory);
-            ListView listView = (ListView) findViewById(R.id.listView1);
+            ListView listView = (ListView) findViewById(R.id.main_passwordsList);
             ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
             //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
             listView.setAdapter(adapter);
@@ -232,10 +226,10 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
 
         initList();
 
-        newDirectoryButton = (Button)findViewById(R.id.button1);
-        newPasswordButton = (Button)findViewById(R.id.button2);
-        logoutButton = (Button)findViewById(R.id.button3);
-        higherDirectory = (Button)findViewById(R.id.button4);
+        newDirectoryButton = (Button)findViewById(R.id.main_addDirectoryButton);
+        newPasswordButton = (Button)findViewById(R.id.main_addPasswordButton);
+        logoutButton = (Button)findViewById(R.id.main_logoutButton);
+        higherDirectory = (Button)findViewById(R.id.main_exitDirectoryButton);
         currentPath = "/";
         Bundle bundle = getIntent().getExtras();
         masterPassword = bundle.getString("master-password");

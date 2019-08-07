@@ -6,15 +6,6 @@
     android:paddingTop = "@dimen/activity_vertical_margin"
     android:paddingBottom = "@dimen/activity_vertical_margin" tools:context = ".CreateActivity">
 
-    <TextView
-        android:id="@+id/textview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:text="Edit/Add Directory"
-        android:textSize="35dp" />
-
     <!--TextView
         android:layout_width = "wrap_content"
         android:layout_height = "wrap_content"
@@ -24,25 +15,6 @@
         android:layout_centerHorizontal = "true"
         android:textColor = "#ff7aff24"
         android:textSize = "35dp" /-->
-
-    <EditText
-        android:id="@+id/editText1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="90dp"
-        android:layout_marginEnd="9dp"
-        android:layout_marginRight="9dp"
-        android:focusable="true"
-        android:hint='"Name"'
-        android:textColorHighlight="#ff7eff15"
-        android:textColorHint="#808080" />
 
     <!--ImageView
         android:layout_width="wrap_content"
@@ -75,36 +47,49 @@
         android:textSize="25dp"
         android:layout_toRightOf="@+id/textview" /-->
 
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="347dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editText1"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="56dp"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="184dp"
-        android:layout_marginEnd="51dp"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:text="save" />
-
-    <Button
-        android:id="@+id/button2"
+    <TextView
+        android:id="@+id/editDirectory_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/button1"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="59dp"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="23dp"
-        android:layout_marginEnd="56dp"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:text="@android:string/cancel" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:text="@string/manager_EditDirectory"
+        android:textColor="@color/colorText"
+        android:textSize="@dimen/manager_MainLabel"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/editDirectory_editName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editDirectory_textView"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginRight="10dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="@string/manager_DirectoryName" />
+
+    <Button
+        android:id="@+id/editDirectory_saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editDirectory_editName"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/manager_Save" />
+
+    <Button
+        android:id="@+id/editDirectory_cancelButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/editDirectory_saveButton"
+        android:layout_alignParentRight="false"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:text="@string/manager_Cancel" />
 
 </RelativeLayout>

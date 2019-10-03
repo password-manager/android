@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -225,6 +226,9 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         setContentView(R.layout.activity_main);
 
         initList();
+        FileOutputStream fOut = null;
+
+        deleteFile("users");
 
         newDirectoryButton = (Button)findViewById(R.id.main_addDirectoryButton);
         newPasswordButton = (Button)findViewById(R.id.main_addPasswordButton);

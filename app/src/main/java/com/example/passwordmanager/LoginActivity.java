@@ -66,9 +66,22 @@ public class LoginActivity extends Activity  {
 
     public void login(View view) {
         Intent intent = new Intent(this, MainActivity.class);
-        EditText editText1 = (EditText) findViewById(R.id.editPassword_editName);
+        EditText editText1 = findViewById(R.id.editPassword_editPassword);
         String password = editText1.getText().toString();
+        EditText editText2 = findViewById(R.id.editPassword_editName);
+        String username = editText2.getText().toString();
         intent.putExtra("master_password", password);
+        intent.putExtra("username", username);//TODO
+        String file = username;
+        FileOutputStream fOut = null;
+        try {
+            fOut = openFileOutput(file, MODE_PRIVATE);
+            fOut.write(jsonTest.getBytes());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         startActivity(intent);
     }
 
@@ -125,16 +138,6 @@ public class LoginActivity extends Activity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         localUserbase = new Userbase(getBaseContext());
-        String file = "filename";
-        FileOutputStream fOut = null;
-        try {
-            fOut = openFileOutput(file, MODE_PRIVATE);
-            fOut.write(jsonTest.getBytes());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
         b1 = (Button)findViewById(R.id.editPassword_saveButton);

@@ -21,7 +21,7 @@ import java.util.Arrays;
 public class EditDirectoryActivity extends Activity {
     Button b1, b2, b3;
     EditText ed1, ed2;
-    String name, currentPath, masterPassword, operation_type;
+    String name, currentPath, masterPassword, operation_type, username;
     JSONArray database;
     TextView tx1;
     int counter = 3;
@@ -76,7 +76,7 @@ public class EditDirectoryActivity extends Activity {
     }
 
     private void saveDatabase() {
-        String file = "filename";
+        String file = username;
         try {
             FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
             fOut.write(database.toString().getBytes());
@@ -96,6 +96,7 @@ public class EditDirectoryActivity extends Activity {
         ed1 = (EditText) findViewById(R.id.editDirectory_editName);
         Intent intent = getIntent();
         String databaseString = intent.getStringExtra("database");
+        username = intent.getStringExtra("username");
         currentPath = intent.getStringExtra("path");
         operation_type = intent.getStringExtra("operation_type");
         name = intent.getStringExtra("name");

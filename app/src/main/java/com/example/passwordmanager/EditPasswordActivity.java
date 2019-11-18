@@ -23,7 +23,7 @@ import java.util.Arrays;
 public class EditPasswordActivity extends Activity {
     Button b1, b2, b3;
     EditText ed1, ed2;
-    String name, currentPath, masterPassword, operation_type;
+    String name, currentPath, masterPassword, operation_type, username;
     JSONArray database;
     CheckBox showPassword;
     TextView tx1;
@@ -80,7 +80,7 @@ public class EditPasswordActivity extends Activity {
     }
 
     private void saveDatabase() {
-        String file = "filename";
+        String file = username;
         try {
             FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
             fOut.write(database.toString().getBytes());
@@ -102,6 +102,7 @@ public class EditPasswordActivity extends Activity {
         showPassword = (CheckBox)findViewById(R.id.editPassword_showPassword);
         Intent intent = getIntent();
         String databaseString = intent.getStringExtra("database");
+        username = intent.getStringExtra("username");
         currentPath = intent.getStringExtra("path");
         operation_type = intent.getStringExtra("operation_type");
         name = intent.getStringExtra("name");

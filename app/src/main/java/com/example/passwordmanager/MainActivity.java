@@ -2,6 +2,7 @@ package com.example.passwordmanager;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
@@ -12,6 +13,8 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -32,7 +35,7 @@ import java.util.List;
 
 public class MainActivity extends Activity  implements AdapterView.OnClickListener, AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener{
     Button newDirectoryButton, newPasswordButton, logoutButton, higherDirectory;
-    String currentPath, masterPassword;
+    String currentPath, masterPassword, username;
     CheckBox showPassword;
     JSONArray database;
     public static String convertStreamToString(InputStream is) {
@@ -41,7 +44,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         String line = null;
         try {
             while (true) {
-                if (!((line = reader.readLine()) != null)) break;
+                if ((line = reader.readLine()) == null) break;
                 sb.append(line).append("\n");
             }
             reader.close();
@@ -67,6 +70,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         return directory;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onClick(View v) {
         if (currentPath.equals("/")){
@@ -93,7 +97,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         String name = ((TextView) v.findViewById(R.id.name)).getText().toString();
         String type = ((TextView) v.findViewById(R.id.type)).getText().toString();
         if (type.equals("password")){
-            //display password
+            //TODO display password
         } else {
             //change directory
             try {
@@ -117,6 +121,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         Intent intent = new Intent();
         String name = ((TextView) v.findViewById(R.id.name)).getText().toString();
         String type = ((TextView) v.findViewById(R.id.type)).getText().toString();
+        intent.putExtra("username", username);
         intent.putExtra("position", position);
         intent.putExtra("id", id);
         intent.putExtra("path", currentPath);
@@ -141,7 +146,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     }
 
     ArrayList<ListableItem> arrayOfItems = new ArrayList<ListableItem>();
-    String file = "filename";
+    String file = username;
     private void populateList(List<ListableItem> arrayOfItems, JSONArray jsonMainNode) throws JSONException {
         for(int i = 0; i<jsonMainNode.length();i++){
             JSONObject jsonChildNode = jsonMainNode.getJSONObject(i);
@@ -160,10 +165,21 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     }
 
     private void initList(){
-
+        FileInputStream fin = null;
+        try {
+            String file = username;
+            fin = openFileInput(file);
+        } catch (FileNotFoundException e) {
+            try {
+                FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
+                fOut.write("[]".getBytes());
+            } catch (FileNotFoundException e2) {
+                e.printStackTrace();
+            } catch (IOException e2) {
+                e.printStackTrace();
+            }
+        }
         try{
-            String file = "filename";
-            FileInputStream fin = openFileInput(file);
             String temp = convertStreamToString(fin);
             database = new JSONArray(temp);
             fin.close();
@@ -179,23 +195,19 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         catch(JSONException e){
             Toast.makeText(getApplicationContext(), "Error"+e.toString(), Toast.LENGTH_SHORT).show();
         } catch (FileNotFoundException e) {
+
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private HashMap<String, String> createEmployee(String name, String number){
-        HashMap<String, String> employeeNameNo = new HashMap<String, String>();
-        employeeNameNo.put(name, number);
-        return employeeNameNo;
-    }
 
     @Override
     public void onResume(){
         super.onResume();
         try {
-            String file = "filename";
+            String file = username;
             FileInputStream fin = openFileInput(file);
             String temp = convertStreamToString(fin);
             database = new JSONArray(temp);
@@ -203,7 +215,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             JSONArray subdirectory = getDirectory(currentPath);
             arrayOfItems.clear();
             populateList(arrayOfItems, subdirectory);
-            ListView listView = (ListView) findViewById(R.id.main_passwordsList);
+            ListView listView = findViewById(R.id.main_passwordsList);
             ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
             //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
             listView.setAdapter(adapter);
@@ -224,7 +236,9 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
-
+        Bundle bundle = getIntent().getExtras();
+        masterPassword = bundle.getString("master-password");
+        username = bundle.getString("username");
         initList();
         FileOutputStream fOut = null;
 
@@ -235,14 +249,14 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         logoutButton = (Button)findViewById(R.id.main_logoutButton);
         higherDirectory = (Button)findViewById(R.id.main_exitDirectoryButton);
         currentPath = "/";
-        Bundle bundle = getIntent().getExtras();
-        masterPassword = bundle.getString("master-password");
+
 
 
         newDirectoryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
+                intent.putExtra("username", username);
                 intent.putExtra("operation_type", "new");
                 intent.putExtra("path", currentPath);
                 intent.putExtra("database", database.toString());
@@ -256,6 +270,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
+                intent.putExtra("username", username);
                 intent.putExtra("operation_type", "new");
                 intent.putExtra("path", currentPath);
                 intent.putExtra("database", database.toString());

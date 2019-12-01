@@ -47,6 +47,16 @@
         android:textSize="25dp"
         android:layout_toRightOf="@+id/textview" /-->
 
+    <Button
+        android:id="@+id/editDirectory_deleteButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editDirectory_cancelButton"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:text="DELETE" />
+
     <TextView
         android:id="@+id/editDirectory_textView"
         android:layout_width="wrap_content"
@@ -85,7 +95,7 @@
         android:id="@+id/editDirectory_cancelButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/editDirectory_saveButton"
+        android:layout_below="@+id/editDirectory_saveButton"
         android:layout_alignParentRight="false"
         android:layout_marginLeft="20dp"
         android:layout_marginTop="20dp"

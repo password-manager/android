@@ -19,6 +19,15 @@ public class Userbase {
     List<String> records = new ArrayList<>();
     Context ctx;
     String fileName = "users";
+    private static Userbase INSTANCE = null;
+
+    public static Userbase getInstance(Context ctx) {
+        if(INSTANCE == null) {
+            INSTANCE = new Userbase(ctx);
+        }
+        return INSTANCE;
+    }
+
     public Userbase(Context ctx) {
         this.ctx = ctx;
         FileInputStream fIn = null;

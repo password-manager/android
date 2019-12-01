@@ -5,10 +5,13 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,6 +45,7 @@ public class EditDirectoryActivity extends Activity {
         return directory;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void saveChanges(String path) throws JSONException {
         JSONArray directory = database;
         if (!path.equals("/")) {
@@ -64,7 +68,16 @@ public class EditDirectoryActivity extends Activity {
                     break;
                 }
             }
+        } else if (operation_type.equals("delete")) {
+            for (int i = 0; i < directory.length(); i++) {
+                JSONObject item = directory.getJSONObject(i);
+                if (item.optString("type").equals("directory") && item.optString("name").equals(name)) {
+                    directory.remove(i);
+                    break;
+                }
+            }
         } else {
+            Log.i("TEST","else");
             JSONObject newItem = new JSONObject();
             newItem.put("type", "directory");
             newItem.put("name", ed1.getText().toString());
@@ -93,6 +106,7 @@ public class EditDirectoryActivity extends Activity {
 
         b1 = (Button) findViewById(R.id.editDirectory_saveButton);
         b2 = (Button) findViewById(R.id.editDirectory_cancelButton);
+        b3 = (Button) findViewById(R.id.editDirectory_deleteButton);
         ed1 = (EditText) findViewById(R.id.editDirectory_editName);
         Intent intent = getIntent();
         String databaseString = intent.getStringExtra("database");
@@ -100,6 +114,10 @@ public class EditDirectoryActivity extends Activity {
         currentPath = intent.getStringExtra("path");
         operation_type = intent.getStringExtra("operation_type");
         name = intent.getStringExtra("name");
+        if (!operation_type.equals("edit")) {
+            ((TextView) findViewById(R.id.editDirectory_textView)).setText("CREATE DIRECTORY");
+            b3.setVisibility(View.GONE);
+        }
         try {
             database = new org.json.JSONArray(databaseString);
         } catch (JSONException e) {
@@ -124,6 +142,7 @@ public class EditDirectoryActivity extends Activity {
             @Override
             public void onClick(View v) {
                 try {
+                    Log.i("TEST","Button pressed, operation_type" + operation_type);
                     saveChanges(currentPath);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -135,6 +154,18 @@ public class EditDirectoryActivity extends Activity {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    operation_type = "delete";
+                    saveChanges(currentPath);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

@@ -1,11 +1,21 @@
 package com.example.passwordmanager;
 
+import android.content.Context;
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -13,54 +23,38 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import static com.example.passwordmanager.MainActivity.convertStreamToString;
+
 public class LocalDatabase {
-    JSONObject lastRemote;
-    JSONObject database;
+    public JSONObject lastRemote;
+    public JSONObject database;
+    public String username;
+    static public Context context = null;
+    private static LocalDatabase single_instance = null;
+
+    public LocalDatabase(String username){
+        try {
+            this.username = username;
+            String file = username;
+            FileInputStream fin = context.openFileInput(file);
+            String temp = convertStreamToString(fin);
+            JSONArray fullDatabase = new JSONArray(temp);
+            lastRemote = fullDatabase.getJSONObject(0);
+            database = fullDatabase.getJSONObject(1);
+            fin.close();
+        }catch (Exception e){
+            Log.i("LocalDatabase", "Constructor");
+        }
+    }
+
+    public LocalDatabase getInstance(String username){
+        if (single_instance == null)
+            single_instance = new LocalDatabase(username);
+
+        return single_instance;
+    }
 
     public String toString(){
-        return null;
-    }
-
-    public String encrypt(String message, String password){
-        try {
-            byte[] srcBuff = message.getBytes("UTF8");
-            SecureRandom secureRandom = new SecureRandom();
-            byte[] iv = new byte[16];
-            secureRandom.nextBytes(iv);
-            SecretKeySpec skeySpec = new SecretKeySpec(password.getBytes("UTF-8"), "AES");
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            Cipher ecipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-            ecipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivSpec);
-
-            byte[] dstBuff = ecipher.doFinal(srcBuff);
-
-            String base64 = Base64.encodeToString(dstBuff, Base64.DEFAULT);
-
-            return base64;
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public String decrypt(String message, String password, String iv){
-        try {
-            SecretKeySpec skeySpec = new SecretKeySpec(password.getBytes("UTF8"), "AES");
-            IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes("UTF8"));
-
-            Cipher ecipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-            ecipher.init(Cipher.DECRYPT_MODE, skeySpec, ivSpec);
-
-            byte[] raw = Base64.decode(message, Base64.DEFAULT);
-
-            byte[] originalBytes = ecipher.doFinal(raw);
-
-            String original = new String(originalBytes, "UTF8");
-
-            return original;
-        } catch (Exception e){
-            e.printStackTrace();
-        }
         return null;
     }
 
@@ -76,35 +70,35 @@ public class LocalDatabase {
         //State new_state = clean_state(enhanced_new_state)
         JSONObject newState = diminishState(enhancedNewState);
         //save_as_current_state(new_state)
-        this.database = newState;
+        this.database = newState; //TODO copy?
         //save_as_old_state(new_state)
-        this.lastRemote = newState;
+        this.lastRemote = newState; //TODO copy?
         //clear_current_logs()*/
     }
 
     public JSONObject enhanceState(JSONObject oldState, JSONArray logs){
-        try {
+        try{
             JSONObject enhancedState = new JSONObject(oldState.toString());
             for (int i = 0; i < logs.length(); i++) {
-                JSONObject log = logs.getJSONObject(i);
+                JSONObject log = logs.optJSONObject(i);
                 if (log.getString("type").equals("create_password"))
-                    getDirectory(log.getString("path"), enhancedState).getJSONArray("data").put(log.getJSONObject("data"));
+                    JSONops.getDirectory(log.optString("path"), enhancedState).getJSONArray("data").put(log.optJSONObject("data"));
                 if (log.get("type").equals("create_directory"))
-                    getDirectory(log.getString("path"), enhancedState).getJSONArray("data").put(log.getJSONObject("data"));
+                    JSONops.getDirectory(log.optString("path"), enhancedState).getJSONArray("data").put(log.optJSONObject("data"));
                 if (log.get("type").equals("modify_password")) {
-                    JSONObject password = getPassword(log.getString("path"), enhancedState);
-                    password = log.getJSONObject("data");//TODO
+                    JSONObject password = JSONops.getPassword(log.optString("path"), enhancedState);
+                    password = log.optJSONObject("data");//TODO
                 }
                 if (log.get("type").equals("modify_directory")){
-                    JSONObject directory = getPassword(log.getString("path"), enhancedState);
-                    directory.put("name", log.getJSONObject("name"));//TODO
+                    JSONObject directory = JSONops.getPassword(log.optString("path"), enhancedState);
+                    directory.put("name", log.optJSONObject("name"));//TODO
                 }
                 if (log.get("type").equals("delete_password"))
-                    deletePassword(log.getString("path"), enhancedState);//TODO
+                    deletePassword(log.optString("path"), enhancedState);//TODO
                 if (log.get("type").equals("delete_directory"))
-                    deleteDirectory(log.getString("path"), enhancedState);//TODO
+                    deleteDirectory(log.optString("path"), enhancedState);//TODO
                 //foreach directory in log.path
-                String[] dirs = log.getString("path").split("/");
+                String[] dirs = log.optString("path").split("/");
                 String dir = "/";
                 int j = 1;
                 while (!dir.equals(log.getString("path"))) {
@@ -122,7 +116,7 @@ public class LocalDatabase {
     public JSONObject diminishState(JSONObject enhancedState){
         try {
             JSONObject diminishedState = new JSONObject();
-            if (!enhancedState.getBoolean("deleted") && enhancedState.getString("type").equals("directory")){
+            if (!enhancedState.optBoolean("deleted") && enhancedState.getString("type").equals("directory")){
                 JSONArray dir = enhancedState.getJSONArray("data");
                 JSONArray newDir = new JSONArray();
                 for (int i = 0; i < enhancedState.length(); i++) {
@@ -133,7 +127,7 @@ public class LocalDatabase {
                         .put("type", "directory")
                         .put("name", enhancedState.getString("name"))
                         .put("data", newDir);
-            } else if (!enhancedState.getBoolean("deleted") && enhancedState.getString("type").equals("password")) {
+            } else if (!enhancedState.optBoolean("deleted") && enhancedState.getString("type").equals("password")) {
                 JSONObject newNode = new JSONObject()
                         .put("type", "password")
                         .put("name", enhancedState.getString("name"))
@@ -147,7 +141,8 @@ public class LocalDatabase {
     }
 
     public JSONObject getDirectory(String path) throws JSONException {
-        if (path.equals("/")) return database;
+        return JSONops.getDirectory(path, database);
+        /*if (path.equals("/")) return database;
         String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
         JSONArray directory = database.getJSONArray("data");
         for (String directoryName : pathArray){
@@ -158,32 +153,12 @@ public class LocalDatabase {
                 }
             }
         }
-        return null;
-    }
-
-    public JSONObject getDirectory(String path, JSONObject database) throws JSONException {
-        if (path.equals("/")) return database;
-        String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
-        JSONArray directory = database.getJSONArray("data");
-        for (String directoryName : pathArray){
-            for (int i = 0; i < directory.length(); i++){
-                JSONObject item = directory.getJSONObject(i);
-                if (item.optString("type").equals("directory") && item.optString("name").equals(directoryName)){
-                    return item;
-                }
-            }
-        }
-        return null;
+        return null;*/
     }
 
     public JSONObject getPassword(String path){
-        return null;//TODO
+        return JSONops.getPassword(path, database);
     }
-
-    public JSONObject getPassword(String path, JSONObject database){
-        return null;//TODO
-    }
-
 
     public void deleteDirectory(String path){
         //TODO
@@ -254,7 +229,7 @@ public class LocalDatabase {
                     .put("type", localState.getString("type"))
                     .put("name", localState.getString("name"));
             if (newState.getString("type").equals("password")) {
-                if (localState.getDouble("last_modified") > serverState.getDouble("last_modified")) {
+                if (localState.optDouble("last_modified", 0) > serverState.optDouble("last_modified", 0)) {
                     return localState;
                 } else {
                     return serverState;
@@ -333,6 +308,7 @@ public class LocalDatabase {
 
     public void updateServer(JSONObject serverState, JSONObject enhancedNewState){
         JSONArray update_logs = createUpdateLogs(serverState, enhancedNewState, "/");
-        //send_to_server(update_logs) TODO
+        ServerConnection sc = ServerConnection.getInstance();
+        sc.sendLogs(update_logs);
     }
 }

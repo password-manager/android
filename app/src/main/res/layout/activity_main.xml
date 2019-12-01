@@ -62,7 +62,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginStart="71dp"
         android:layout_marginLeft="20dp"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="20dp"
         android:layout_marginEnd="63dp"
         android:layout_marginRight="20dp"
         android:layout_marginBottom="20dp"
@@ -81,7 +81,7 @@
         android:layout_marginLeft="20dp"
         android:layout_marginEnd="157dp"
         android:layout_marginRight="20dp"
-        android:layout_marginBottom="50dp"
+        android:layout_marginBottom="20dp"
         android:text="@string/manager_Logout"
         android:textSize="@dimen/manager_ButtonTextSize" />
 
@@ -90,12 +90,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/main_addDirectoryButton"
-        android:layout_alignStart="@+id/main_passwordsList"
-        android:layout_alignEnd="@+id/main_passwordsList"
-        android:layout_centerInParent="false"
-        android:layout_marginStart="65dp"
-        android:layout_marginEnd="77dp"
-        android:layout_marginBottom="40dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="26dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginEnd="29dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"
         android:text="@string/manager_ExitDirectory"
         android:textSize="@dimen/manager_ButtonTextSize" />
 

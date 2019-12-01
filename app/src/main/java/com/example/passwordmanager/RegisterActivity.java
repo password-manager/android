@@ -67,7 +67,7 @@ public class RegisterActivity extends Activity {
                 byte[] passwordHash = hashPassword(ed2.getText().toString(), salt);
                 User user = new User(email, passwordHash, salt);
                 //if connected register in server
-                Userbase userbase = new Userbase(getBaseContext());
+                Userbase userbase = Userbase.getInstance(getBaseContext());
                 if (userbase.getUser(email) == null){
                     userbase.saveUser(user);
                 }

@@ -4,13 +4,18 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.PasswordTransformationMethod;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +34,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 
@@ -38,6 +42,11 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     String currentPath, masterPassword, username;
     CheckBox showPassword;
     JSONArray database;
+    PopupWindow popUp;
+    LinearLayout layout;
+    TextView tv;
+    LinearLayout.LayoutParams params;
+    LinearLayout mainLayout;
     public static String convertStreamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
@@ -96,8 +105,48 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         Intent intent = new Intent();
         String name = ((TextView) v.findViewById(R.id.name)).getText().toString();
         String type = ((TextView) v.findViewById(R.id.type)).getText().toString();
+        String data = "";
         if (type.equals("password")){
-            //TODO display password
+            JSONArray dir = new JSONArray();
+            try {
+                dir= getDirectory(currentPath);
+                for (int i = 0; i < dir.length(); i++) {
+                    JSONObject item = dir.getJSONObject(i);
+                    if (item.optString("type").equals("password") && item.optString("name").equals(name)) {
+                        data = item.optString("data");
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            LayoutInflater inflater = (LayoutInflater)
+                    getSystemService(LAYOUT_INFLATER_SERVICE);
+
+            View popupView = inflater.inflate(R.layout.popup_window, null);
+            TextView tv = (TextView) popupView.findViewById(R.id.textView6);
+            tv.setText(name);
+            final TextView tv2 = (TextView) popupView.findViewById(R.id.textView9);
+            tv2.setText(data);
+            CheckBox popupShowPassword = (CheckBox) popupView.findViewById(R.id.editPassword_showPassword);
+            popupShowPassword.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (((CheckBox) v).isChecked()) {
+                        (tv2).setTransformationMethod(null);
+                    } else {
+                        tv2.setTransformationMethod(new PasswordTransformationMethod());
+                    }
+                }
+            });
+            // create the popup window
+            int width = LinearLayout.LayoutParams.WRAP_CONTENT;
+            int height = LinearLayout.LayoutParams.WRAP_CONTENT;
+            boolean focusable = true; // lets taps outside the popup also dismiss it
+            final PopupWindow popupWindow = new PopupWindow(popupView, width, height, focusable);
+
+            // show the popup window
+            // which view you pass in doesn't matter, it is only used for the window tolken
+            popupWindow.showAtLocation(v, Gravity.CENTER, 0, 0);
         } else {
             //change directory
             try {

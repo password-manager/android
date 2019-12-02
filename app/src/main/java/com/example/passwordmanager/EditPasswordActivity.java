@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,72 +31,51 @@ import java.util.Arrays;
 public class EditPasswordActivity extends Activity {
     Button b1, b2, b3, b4;
     EditText ed1, ed2;
-    String name, currentPath, masterPassword, operation_type, username;
+    String name, currentPath, masterPassword, operation_type, username, fullPath;
+    LocalDatabase localDatabase = null;
     JSONArray database;
     CheckBox showPassword;
-    TextView tx1;
-    int counter = 3;
 
-    public JSONArray getDirectory(String path) throws JSONException {
-        if (path.equals("/")) return database;
-        String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
-        JSONArray directory = database;
-        for (String directoryName : pathArray){
-            for (int i = 0; i < directory.length(); i++){
-                JSONObject item = directory.getJSONObject(i);
-                if (item.optString("type").equals("directory") && item.optString("name").equals(directoryName)){
-                    directory = item.getJSONArray("data");
-                    break;
-                }
-            }
-        }
-        return directory;
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void saveChanges(String path) throws JSONException {
-        JSONArray directory = database;
-        if (!path.equals("/")){
-            String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
-            for (String directoryName : pathArray){
-                for (int i = 0; i < directory.length(); i++){
-                    JSONObject item = directory.getJSONObject(i);
-                    if (item.optString("type").equals("directory") && item.optString("name").equals(directoryName)){
-                        directory = item.getJSONArray("data");
-                        break;
-                    }
-                }
-            }
-        }
+        JSONArray directory = localDatabase.getDirectory(currentPath).getJSONArray("data");
         if (operation_type.equals("edit")) {
-            for (int i = 0; i < directory.length(); i++) {
+            JSONObject newPassword = new JSONObject(localDatabase.getPassword(fullPath).toString());
+            newPassword.put("name", ed1.getText().toString());
+            newPassword.put("data", ed2.getText().toString());
+            localDatabase.safeModify(fullPath, newPassword);
+            /*for (int i = 0; i < directory.length(); i++) {
                 JSONObject item = directory.getJSONObject(i);
                 if (item.optString("type").equals("password") && item.optString("name").equals(name)) {
                     item.put("name", ed1.getText().toString());
                     item.put("data", ed2.getText().toString());
                     break;
                 }
-            }
+            }*/
         } else if (operation_type.equals("delete")) {
-            for (int i = 0; i < directory.length(); i++) {
+            Log.i("TESTdeletepass", fullPath);
+            localDatabase.deletePassword(fullPath);
+            /*for (int i = 0; i < directory.length(); i++) {
                 JSONObject item = directory.getJSONObject(i);
                 if (item.optString("type").equals("password") && item.optString("name").equals(name)) {
                     directory.remove(i);
                     break;
                 }
-            }
+            }*/
         } else {
             JSONObject newItem = new JSONObject();
             newItem.put("type", "password");
             newItem.put("name", ed1.getText().toString());
             newItem.put("data", ed2.getText().toString());
-            directory.put(newItem);
+            localDatabase.safeAdd(currentPath, newItem);
+            //directory.put(newItem);
         }
-        saveDatabase();
+        //saveDatabase();
         finish();
     }
 
-    private void saveDatabase() {
+    /*private void saveDatabase() {
         String file = username;
         try {
             FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
@@ -103,13 +83,14 @@ public class EditPasswordActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create);
+
 
         b1 = (Button)findViewById(R.id.editPassword_saveButton);
         b2 = (Button)findViewById(R.id.editPassword_cancelButton);
@@ -119,22 +100,28 @@ public class EditPasswordActivity extends Activity {
         ed2 = (EditText)findViewById(R.id.editPassword_editPassword);
         showPassword = (CheckBox)findViewById(R.id.editPassword_showPassword);
         Intent intent = getIntent();
-        String databaseString = intent.getStringExtra("database");
+        //String databaseString = intent.getStringExtra("database");
         username = intent.getStringExtra("username");
         currentPath = intent.getStringExtra("path");
         operation_type = intent.getStringExtra("operation_type");
-        name = intent.getStringExtra("name");
+        localDatabase = LocalDatabase.getInstance(username);
         if (!operation_type.equals("edit")) {
             ((TextView) findViewById(R.id.editPassword_textview)).setText("CREATE DIRECTORY");
             b3.setVisibility(View.GONE);
+        } else{
+            name = intent.getStringExtra("name");
+            fullPath = currentPath+name;
         }
-        try {
+        /*try {
             database = new org.json.JSONArray(databaseString);
         } catch (JSONException e) {
             e.printStackTrace();
-        }
+        }*/
         if (operation_type.equals("edit")){
-            try {
+            JSONObject item = localDatabase.getPassword(fullPath);
+            ed1.setText(item.optString("name"));
+            ed2.setText(item.optString("data"));
+            /*try {
                 JSONArray directory = getDirectory(currentPath);
                 for (int i = 0; i < directory.length(); i++) {
                     JSONObject item = directory.getJSONObject(i);
@@ -147,7 +134,7 @@ public class EditPasswordActivity extends Activity {
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
         b1.setOnClickListener(new View.OnClickListener() {
             @Override

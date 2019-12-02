@@ -22,29 +22,7 @@ public class RegisterActivity extends Activity {
     Button b1, b2, b3;
     EditText ed1, ed2;
     CheckBox showPassword;
-    public byte[] hashPassword(String password, byte[] salt2){
-        int iterations = 100000;
-        int keyLength = 512;
-        char[] passwordChars = password.toCharArray();
-        byte[] res2;
-        try
-        {
-            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-            PBEKeySpec spec2 = new PBEKeySpec( passwordChars, salt2, iterations, keyLength );
-            SecretKey key2 = keyFactory.generateSecret( spec2 );
-            res2 = key2.getEncoded( );
-            String hashString2 = new String(res2);
-            String saltString2 = new String(salt2);
-            Log.i("TESTTT hash and salt", Base64.encodeToString(res2,0)+"\n"+saltString2);
-            return res2;
-        }
-        catch (NoSuchAlgorithmException e){
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,7 +42,7 @@ public class RegisterActivity extends Activity {
             public void onClick(View v) {
                 String email = ed1.getText().toString();
                 byte[] salt = {1};  //TODO
-                byte[] passwordHash = hashPassword(ed2.getText().toString(), salt);
+                byte[] passwordHash = Cryptography.hashPassword(ed2.getText().toString(), salt);
                 User user = new User(email, passwordHash, salt);
                 //if connected register in server
                 Userbase userbase = Userbase.getInstance(getBaseContext());

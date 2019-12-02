@@ -1,8 +1,14 @@
 package com.example.passwordmanager;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.os.Build;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,67 +21,159 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.security.SecureRandom;
-import java.util.Arrays;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
-import static com.example.passwordmanager.MainActivity.convertStreamToString;
+//import static com.example.passwordmanager.MainActivity.convertStreamToString;
 
 public class LocalDatabase {
-    public JSONObject lastRemote;
-    public JSONObject database;
-    public String username;
-    static public Context context = null;
+    volatile public JSONObject lastRemote;
+    volatile public JSONObject database;
+    static volatile public String username;
+    static volatile public Context context = null;
     private static LocalDatabase single_instance = null;
+    private Cryptography.EnCryptor encryptor;
+    private Cryptography.DeCryptor decryptor;
+    private static String emptyState = "[\n" +
+            "  {\n" +
+            "    \"type\": \"directory\",\n" +
+            "    \"name\": \"root\",\n" +
+            "    \"data\": []\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"type\": \"directory\",\n" +
+            "    \"name\": \"root\",\n" +
+            "    \"data\": []\n" +
+            "  }\n" +
+            "]";
 
-    public LocalDatabase(String username){
+    public static String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line = null;
         try {
-            this.username = username;
-            String file = username;
-            FileInputStream fin = context.openFileInput(file);
+            while (true) {
+                if ((line = reader.readLine()) == null) break;
+                sb.append(line).append("\n");
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public LocalDatabase(String user){
+        FileInputStream fin = null;
+        Log.i("TESTLocalDatabase", "ConstructorStart");
+        try {
+            username = user;
+            fin = context.openFileInput(username);
+        } catch (FileNotFoundException e) {
+            try {
+                //FIRST TIME LOGGING ON THIS DEVICE
+                encryptor = new Cryptography.EnCryptor();
+                decryptor = new Cryptography.DeCryptor();
+                FileOutputStream fOut = context.openFileOutput(username, Context.MODE_PRIVATE);
+                byte[] encryptedText = encryptor.encryptText(username, emptyState);
+                Log.i("TESTEncrypted", new String(encryptedText));
+                fOut.write(Base64.encodeToString(encryptedText, Base64.DEFAULT).getBytes());
+                fOut.close();
+                Log.i("TESTLocalDatabase", "Writeemptystate");
+            } catch (FileNotFoundException e2) {
+                e.printStackTrace();
+            } catch (IOException e2) {
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e1) {
+                e1.printStackTrace();
+            } catch (NoSuchProviderException e1) {
+                e1.printStackTrace();
+            } catch (InvalidAlgorithmParameterException e1) {
+                e1.printStackTrace();
+            } catch (NoSuchPaddingException e1) {
+                e1.printStackTrace();
+            } catch (InvalidKeyException e1) {
+                e1.printStackTrace();
+            } catch (Exception e4){
+
+            }
+        }
+        try{
+            Log.i("TESTConstructor0", "");
+            fin = context.openFileInput(username);
             String temp = convertStreamToString(fin);
+            Log.i("TESTConstructor1", temp);
+            temp = decryptor.decryptData(username, Base64.decode(temp, Base64.DEFAULT), encryptor.getIv());
+            Log.i("TESTConstructor", temp);
             JSONArray fullDatabase = new JSONArray(temp);
             lastRemote = fullDatabase.getJSONObject(0);
             database = fullDatabase.getJSONObject(1);
             fin.close();
         }catch (Exception e){
-            Log.i("LocalDatabase", "Constructor");
+            Log.i("TESTLocalDatabase", "Constructor");
         }
     }
 
-    public LocalDatabase getInstance(String username){
-        if (single_instance == null)
-            single_instance = new LocalDatabase(username);
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    static public LocalDatabase getInstance(String name){
+        if (single_instance == null && !name.equals(username))
+            single_instance = new LocalDatabase(name);
 
         return single_instance;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void save(){
+        try{
+            FileOutputStream fOut = context.openFileOutput(username, Context.MODE_PRIVATE);
+            JSONArray fullDatabase = new JSONArray();
+            fullDatabase.put(lastRemote);
+            fullDatabase.put(database);
+            byte[] encryptedText = encryptor.encryptText(username, fullDatabase.toString());
+
+            fOut.write(Base64.encodeToString(encryptedText, Base64.DEFAULT).getBytes());
+            fOut.close();
+        }catch (Exception e){
+            Log.i("TESTLocalDatabase", "Constructor");
+        }
     }
 
     public String toString(){
         return null;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void synchronize(JSONArray remoteLogs){
-        //EnhancedState local_state = new EnhancedState(old_state, local_logs)
-        JSONObject localState = database;
-        //EnhancedState server_state = new EnhancedState(old_state, server_logs)
-        JSONObject serverState = enhanceState(lastRemote, remoteLogs);
-        //EnhancedState enhanced_new_state = merge_states(old_state, local_state, server_state)
-        JSONObject enhancedNewState = mergeStates(lastRemote, localState, serverState);
-        //update_server(server_state, enhanced_new_state)
-        //TODO
-        //State new_state = clean_state(enhanced_new_state)
-        JSONObject newState = diminishState(enhancedNewState);
-        //save_as_current_state(new_state)
-        this.database = newState; //TODO copy?
-        //save_as_old_state(new_state)
-        this.lastRemote = newState; //TODO copy?
-        //clear_current_logs()*/
+        try {
+            //EnhancedState local_state = new EnhancedState(old_state, local_logs)
+            JSONObject localState = database;
+            //EnhancedState server_state = new EnhancedState(old_state, server_logs)
+            JSONObject serverState = enhanceState(lastRemote, remoteLogs);
+            //EnhancedState enhanced_new_state = merge_states(old_state, local_state, server_state)
+            JSONObject enhancedNewState = mergeStates(lastRemote, localState, serverState);
+            //update_server(server_state, enhanced_new_state)
+            updateServer(serverState, enhancedNewState);
+            //State new_state = clean_state(enhanced_new_state)
+            JSONObject newState = diminishState(enhancedNewState);
+            //save_as_current_state(new_state)
+            this.database = new JSONObject(newState.toString());
+            //save_as_old_state(new_state)
+            this.lastRemote = new JSONObject(newState.toString());
+            //clear_current_logs()*/
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public JSONObject enhanceState(JSONObject oldState, JSONArray logs){
         try{
             JSONObject enhancedState = new JSONObject(oldState.toString());
@@ -86,17 +184,17 @@ public class LocalDatabase {
                 if (log.get("type").equals("create_directory"))
                     JSONops.getDirectory(log.optString("path"), enhancedState).getJSONArray("data").put(log.optJSONObject("data"));
                 if (log.get("type").equals("modify_password")) {
-                    JSONObject password = JSONops.getPassword(log.optString("path"), enhancedState);
-                    password = log.optJSONObject("data");//TODO
+                    JSONObject newPassword = new JSONObject(log.getJSONObject("data").toString());
+                    JSONops.safeModify(log.optString("path"), newPassword, enhancedState);//TODO timestamps
                 }
                 if (log.get("type").equals("modify_directory")){
                     JSONObject directory = JSONops.getPassword(log.optString("path"), enhancedState);
                     directory.put("name", log.optJSONObject("name"));//TODO
                 }
                 if (log.get("type").equals("delete_password"))
-                    deletePassword(log.optString("path"), enhancedState);//TODO
+                    JSONops.deletePassword(log.optString("path"), enhancedState);//TODO
                 if (log.get("type").equals("delete_directory"))
-                    deleteDirectory(log.optString("path"), enhancedState);//TODO
+                    JSONops.deleteDirectory(log.optString("path"), enhancedState);//TODO
                 //foreach directory in log.path
                 String[] dirs = log.optString("path").split("/");
                 String dir = "/";
@@ -140,7 +238,7 @@ public class LocalDatabase {
         return null;
     }
 
-    public JSONObject getDirectory(String path) throws JSONException {
+    public JSONObject getDirectory(String path) {
         return JSONops.getDirectory(path, database);
         /*if (path.equals("/")) return database;
         String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
@@ -160,25 +258,32 @@ public class LocalDatabase {
         return JSONops.getPassword(path, database);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void deleteDirectory(String path){
-        //TODO
+        JSONops.deleteDirectory(path, database);
+        save();
+        //TODO zapisz timestampa loga wyślij
     }
+    @TargetApi(Build.VERSION_CODES.M)
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void deletePassword(String path){
+        JSONops.deletePassword(path, database);
+        save();
+        //TODO loga wyślij
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void safeAdd(String path, JSONObject node){
+        JSONops.safeAdd(path, node, database);
+        save();
         //TODO
     }
 
-    public void deleteDirectory(String path, JSONObject database){
-        //TODO
-    }
-    public void deletePassword(String path, JSONObject database){
-        //TODO
-    }
 
-    public void saveAdd(String path, JSONObject node){
-        //TODO
-    }
-
-    public void saveModify(String path, JSONObject node){
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void safeModify(String path, JSONObject node){
+        JSONops.safeModify(path, node, database);
+        save();
         //TODO
     }
     //arguments have to be directories
@@ -310,5 +415,9 @@ public class LocalDatabase {
         JSONArray update_logs = createUpdateLogs(serverState, enhancedNewState, "/");
         ServerConnection sc = ServerConnection.getInstance();
         sc.sendLogs(update_logs);
+    }
+
+    public boolean isUnique(String currentPath, String name, String type) {
+        return JSONops.isUnique(currentPath, name, type, database);
     }
 }

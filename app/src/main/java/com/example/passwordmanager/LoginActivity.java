@@ -71,8 +71,8 @@ public class LoginActivity extends Activity  {
         EditText editText2 = findViewById(R.id.editPassword_editName);
         String username = editText2.getText().toString();
         intent.putExtra("master_password", password);
-        intent.putExtra("username", username);//TODO
-        String file = username;
+        intent.putExtra("username", username);
+        /*String file = username;
         FileOutputStream fOut = null;
         try {
             fOut = openFileOutput(file, MODE_PRIVATE);
@@ -85,7 +85,7 @@ public class LoginActivity extends Activity  {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
         startActivity(intent);
     }
 

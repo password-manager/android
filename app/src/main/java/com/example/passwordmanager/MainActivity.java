@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,42 +43,10 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     String currentPath, masterPassword, username;
     CheckBox showPassword;
     JSONArray database;
-    PopupWindow popUp;
-    LinearLayout layout;
-    TextView tv;
-    LinearLayout.LayoutParams params;
-    LinearLayout mainLayout;
-    public static String convertStreamToString(InputStream is) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line = null;
-        try {
-            while (true) {
-                if ((line = reader.readLine()) == null) break;
-                sb.append(line).append("\n");
-            }
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return sb.toString();
-    }
+    LocalDatabase localDatabase;
 
-    public JSONArray getDirectory(String path) throws JSONException {
-        if (path.equals("/")) return database;
-        String[] pathArray = Arrays.copyOfRange(path.split("/"), 1, path.split("/").length);
-        JSONArray directory = database;
-        for (String directoryName : pathArray){
-            for (int i = 0; i < directory.length(); i++){
-                JSONObject item = directory.getJSONObject(i);
-                if (item.optString("type").equals("directory") && item.optString("name").equals(directoryName)){
-                    directory = item.getJSONArray("data");
-                    break;
-                }
-            }
-        }
-        return directory;
-    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -86,11 +55,18 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             return;
         }else{
             try {
-                String[] pathArray = Arrays.copyOfRange(currentPath.split("/"), 0, currentPath.split("/").length - 1);
-                currentPath = String.join("/", pathArray);
-                JSONArray subdirectory = getDirectory(currentPath);
+                String[] pathArray = Arrays.copyOfRange(currentPath.split("/"), 0, currentPath.split("/").length-1);
+                currentPath = String.join("/", pathArray) + "/";
+                Log.i("TESTMAINAC", currentPath);
+                JSONArray subdirectory = localDatabase.getDirectory(currentPath).getJSONArray("data");
                 arrayOfItems.clear();
-                populateList(arrayOfItems, subdirectory);
+                JSONArray currentSubdir = new JSONArray();
+                for (int i = 0; i < subdirectory.length(); i++){
+                    if (!subdirectory.getJSONObject(i).optBoolean("deleted")){
+                        currentSubdir.put(subdirectory.getJSONObject(i));
+                    }
+                }
+                populateList(arrayOfItems, currentSubdir);
                 ListView listView = (ListView) findViewById(R.id.main_passwordsList);
                 ListableItemsAdapter adapter = new ListableItemsAdapter(getApplicationContext(), arrayOfItems);
                 listView.setAdapter(adapter);
@@ -109,7 +85,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         if (type.equals("password")){
             JSONArray dir = new JSONArray();
             try {
-                dir= getDirectory(currentPath);
+                dir= localDatabase.getDirectory(currentPath).getJSONArray("data");
                 for (int i = 0; i < dir.length(); i++) {
                     JSONObject item = dir.getJSONObject(i);
                     if (item.optString("type").equals("password") && item.optString("name").equals(name)) {
@@ -151,9 +127,15 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             //change directory
             try {
                 currentPath = currentPath + name + "/";
-                JSONArray subdirectory = getDirectory(currentPath);
+                JSONArray subdirectory = localDatabase.getDirectory(currentPath).getJSONArray("data");
                 arrayOfItems.clear();
-                populateList(arrayOfItems, subdirectory);
+                JSONArray currentSubdir = new JSONArray();
+                for (int i = 0; i < subdirectory.length(); i++){
+                    if (!subdirectory.getJSONObject(i).optBoolean("deleted")){
+                        currentSubdir.put(subdirectory.getJSONObject(i));
+                    }
+                }
+                populateList(arrayOfItems, currentSubdir);
                 ListView listView = (ListView) findViewById(R.id.main_passwordsList);
                 ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
                 listView.setAdapter(adapter);
@@ -175,7 +157,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         intent.putExtra("id", id);
         intent.putExtra("path", currentPath);
         intent.putExtra("name", name);
-        intent.putExtra("database", database.toString());
+        //intent.putExtra("database", database.toString());
         intent.putExtra("operation_type", "edit");
         if (type.equals("password")){
             //edit password
@@ -214,25 +196,26 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     }
 
     private void initList(){
-        FileInputStream fin = null;
+        /*FileInputStream fin = null;
         try {
             String file = username;
             fin = openFileInput(file);
         } catch (FileNotFoundException e) {
             try {
                 FileOutputStream fOut = openFileOutput(file, MODE_PRIVATE);
-                fOut.write("[]".getBytes());
+                fOut.write(emptyState.getBytes());
             } catch (FileNotFoundException e2) {
                 e.printStackTrace();
             } catch (IOException e2) {
                 e.printStackTrace();
             }
-        }
+        }*/
         try{
-            String temp = convertStreamToString(fin);
+            /*String temp = convertStreamToString(fin);
             database = new JSONArray(temp);
-            fin.close();
-            populateList(arrayOfItems, database);
+            fin.close();*/
+            Log.i("localDatabase", "Tu problem");
+            populateList(arrayOfItems, JSONops.filterDeleted(localDatabase.database.getJSONArray("data")));
             ListView listView = (ListView) findViewById(R.id.main_passwordsList);
             ListableItemsAdapter adapter = new ListableItemsAdapter(this, arrayOfItems);
             //SimpleAdapter simpleAdapter = new SimpleAdapter(this, employeeList, android.R.layout.simple_list_item_1, new String[] {"employees"}, new int[] {android.R.id.text1});
@@ -243,11 +226,6 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         }
         catch(JSONException e){
             Toast.makeText(getApplicationContext(), "Error"+e.toString(), Toast.LENGTH_SHORT).show();
-        } catch (FileNotFoundException e) {
-
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -256,12 +234,13 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     public void onResume(){
         super.onResume();
         try {
-            String file = username;
+            /*String file = username;
             FileInputStream fin = openFileInput(file);
             String temp = convertStreamToString(fin);
             database = new JSONArray(temp);
-            fin.close();
-            JSONArray subdirectory = getDirectory(currentPath);
+            fin.close();*/
+            JSONArray subdirectory = localDatabase.getDirectory(currentPath).getJSONArray("data");
+            subdirectory = JSONops.filterDeleted(subdirectory);
             arrayOfItems.clear();
             populateList(arrayOfItems, subdirectory);
             ListView listView = findViewById(R.id.main_passwordsList);
@@ -272,14 +251,11 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
             listView.setOnItemClickListener(this);
         } catch (JSONException e) {
             e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -288,6 +264,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         Bundle bundle = getIntent().getExtras();
         masterPassword = bundle.getString("master-password");
         username = bundle.getString("username");
+        localDatabase = LocalDatabase.getInstance(username);
         initList();
         FileOutputStream fOut = null;
 
@@ -308,7 +285,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
                 intent.putExtra("username", username);
                 intent.putExtra("operation_type", "new");
                 intent.putExtra("path", currentPath);
-                intent.putExtra("database", database.toString());
+                //intent.putExtra("database", database.toString());
                 intent.setClass(getApplicationContext(), EditDirectoryActivity.class);
                 startActivity(intent);
             }
@@ -322,7 +299,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
                 intent.putExtra("username", username);
                 intent.putExtra("operation_type", "new");
                 intent.putExtra("path", currentPath);
-                intent.putExtra("database", database.toString());
+                //intent.putExtra("database", database.toString());
                 intent.setClass(getApplicationContext(), EditPasswordActivity.class);
                 startActivity(intent);
             }

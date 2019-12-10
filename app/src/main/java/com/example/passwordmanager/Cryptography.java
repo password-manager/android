@@ -35,12 +35,9 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Cryptography {
-    static public String encrypt(String message, String password){
+    static public String encrypt(String message, String password, byte[] iv){
         try {
             byte[] srcBuff = message.getBytes("UTF8");
-            SecureRandom secureRandom = new SecureRandom();
-            byte[] iv = new byte[16];
-            secureRandom.nextBytes(iv);
             SecretKeySpec skeySpec = new SecretKeySpec(password.getBytes("UTF-8"), "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             Cipher ecipher = Cipher.getInstance("AES/CBC/PKCS7Padding");

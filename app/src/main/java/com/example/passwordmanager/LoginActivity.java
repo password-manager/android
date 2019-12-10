@@ -33,6 +33,7 @@ public class LoginActivity extends Activity  {
     EditText ed1, ed2;
     Userbase localUserbase;
     TextView tx1;
+    ServerConnection serverConnection;
     int counter = 3;
 
     private String jsonTest = "[\n" +
@@ -123,7 +124,8 @@ public class LoginActivity extends Activity  {
         setContentView(R.layout.activity_login);
         localUserbase = new Userbase(getBaseContext());
         LocalDatabase.context = getApplicationContext();
-
+        ServerConnection.ctx = getApplicationContext();
+        serverConnection = ServerConnection.getInstance();
         b1 = (Button)findViewById(R.id.editPassword_saveButton);
         b2 = (Button)findViewById(R.id.editPassword_cancelButton);
         b3 = (Button)findViewById(R.id.main_logoutButton);
@@ -139,10 +141,28 @@ public class LoginActivity extends Activity  {
                 //login(v);
                 String email = ed1.getText().toString();
                 String password = ed2.getText().toString();
-                //if (connectedToServer) send email, password to Server
-                //else
+                serverConnection.username = email;
                 localUserbase = Userbase.getInstance(getBaseContext());
                 User user = localUserbase.getUser(email);
+
+                try {
+                    serverConnection.login(password, (user == null ));
+                    if (serverConnection.result.split(":")[1].equals("ok")){
+                        if (user == null){
+                            byte[] salt = Base64.decode(serverConnection.result.split(":")[2], Base64.DEFAULT);
+                            byte[] passwordHash = Cryptography.hashPassword(password, salt);
+                            localUserbase.saveUser(new User(email, passwordHash, salt));
+                        }
+                        Toast.makeText(getApplicationContext(),
+                                "Redirecting...",Toast.LENGTH_SHORT).show();
+                        login(v);
+                        return;
+                    }
+                } catch (InterruptedException e) {
+                    Toast.makeText(getApplicationContext(),
+                            "Interrupted Exception",Toast.LENGTH_SHORT).show();
+                }
+
                 if (user == null) {
                     Log.i("TESTT","No user");
                     rejectLogin();

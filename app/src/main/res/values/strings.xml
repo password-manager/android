@@ -18,4 +18,5 @@
     <string name="manager_EnterPassword">Enter your master password</string>
     <string name="manager_CancelButton">CANCEL</string>
     <string name="manager_Login">LOGIN</string>
+    <string name="verify_email">VERIFY EMAIL</string>
 </resources>

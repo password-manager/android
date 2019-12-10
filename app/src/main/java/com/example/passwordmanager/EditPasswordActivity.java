@@ -37,6 +37,7 @@ public class EditPasswordActivity extends Activity {
     CheckBox showPassword;
 
 
+    @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void saveChanges(String path) throws JSONException {
         JSONArray directory = localDatabase.getDirectory(currentPath).getJSONArray("data");
@@ -85,7 +86,8 @@ public class EditPasswordActivity extends Activity {
         }
     }*/
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,7 +108,7 @@ public class EditPasswordActivity extends Activity {
         operation_type = intent.getStringExtra("operation_type");
         localDatabase = LocalDatabase.getInstance(username);
         if (!operation_type.equals("edit")) {
-            ((TextView) findViewById(R.id.editPassword_textview)).setText("CREATE DIRECTORY");
+            ((TextView) findViewById(R.id.editPassword_textview)).setText("CREATE PASSWORD");
             b3.setVisibility(View.GONE);
         } else{
             name = intent.getStringExtra("name");
@@ -167,6 +169,7 @@ public class EditPasswordActivity extends Activity {
         });
 
         b3.setOnClickListener(new View.OnClickListener() {
+            @TargetApi(Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
                 try {

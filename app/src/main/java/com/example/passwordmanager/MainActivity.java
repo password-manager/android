@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +45,7 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
     CheckBox showPassword;
     JSONArray database;
     LocalDatabase localDatabase;
+    ServerConnection serverConnection;
 
 
 
@@ -265,6 +267,15 @@ public class MainActivity extends Activity  implements AdapterView.OnClickListen
         masterPassword = bundle.getString("master-password");
         username = bundle.getString("username");
         localDatabase = LocalDatabase.getInstance(username);
+        serverConnection = ServerConnection.getInstance();
+        ServerConnection.password = masterPassword;
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        long currentTime = timestamp.getTime();
+        try {
+            serverConnection.sendTimestamp(currentTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         initList();
         FileOutputStream fOut = null;
 

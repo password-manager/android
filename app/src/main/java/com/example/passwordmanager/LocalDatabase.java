@@ -185,7 +185,7 @@ public class LocalDatabase {
                     JSONops.getDirectory(log.optString("path"), enhancedState).getJSONArray("data").put(log.optJSONObject("data"));
                 if (log.get("type").equals("modify_password")) {
                     JSONObject newPassword = new JSONObject(log.getJSONObject("data").toString());
-                    JSONops.safeModify(log.optString("path"), newPassword, enhancedState);//TODO timestamps
+                    JSONops.safeModify(log.optString("path"), newPassword, enhancedState);
                 }
                 if (log.get("type").equals("modify_directory")){
                     JSONObject directory = JSONops.getPassword(log.optString("path"), enhancedState);
@@ -200,7 +200,7 @@ public class LocalDatabase {
                 String dir = "/";
                 int j = 1;
                 while (!dir.equals(log.getString("path"))) {
-                    getDirectory(dir).put("last_modified", log.getDouble("timestamp"));
+                    getDirectory(dir).put("timestamp", log.getDouble("timestamp"));
                     dir = dir+"/"+dirs[j];
                     j++;
                 }
@@ -258,6 +258,7 @@ public class LocalDatabase {
         return JSONops.getPassword(path, database);
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void deleteDirectory(String path){
         JSONops.deleteDirectory(path, database);
@@ -312,7 +313,11 @@ public class LocalDatabase {
                                 !node.getString("data").equals(serverDir.getJSONObject(i).getString("data")))) {
                     log.put("type", "modify_"+node.getString("type"));
                     log.put("path", path);
-                    log.put("data", node);
+                    if (node.getString("type").equals("directory")) {
+                        log.put("new_name", node.getString("name"));
+                    } else {
+                        log.put("data", node);
+                    }
                     updateLogs.put(log);
                 }
                 if (i < serverState.length() && serverState.getString("type").equals("directory")) {
@@ -334,7 +339,7 @@ public class LocalDatabase {
                     .put("type", localState.getString("type"))
                     .put("name", localState.getString("name"));
             if (newState.getString("type").equals("password")) {
-                if (localState.optDouble("last_modified", 0) > serverState.optDouble("last_modified", 0)) {
+                if (localState.optDouble("timestamp", 0) > serverState.optDouble("timestamp", 0)) {
                     return localState;
                 } else {
                     return serverState;
@@ -352,18 +357,19 @@ public class LocalDatabase {
                 newNode = mergeStates(oldNode, localNode, serverNode);
                 newState.getJSONArray("data").put(newNode);
             }
-            for (int i = oldDir.length(); i < localDir.length(); i++) {
-                if (localDir.getJSONObject(i).getBoolean("deleted"))
-                    continue;
-                else
-                    mergeNode(newState, localDir.getJSONObject(i));
-            }
             for (int i = oldDir.length(); i < serverDir.length(); i++) {
                 if (serverDir.getJSONObject(i).getBoolean("deleted"))
                     continue;
                 else
                     mergeNode(newState, serverDir.getJSONObject(i));
             }
+            for (int i = oldDir.length(); i < localDir.length(); i++) {
+                if (localDir.getJSONObject(i).getBoolean("deleted"))
+                    continue;
+                else
+                    mergeNode(newState, localDir.getJSONObject(i));
+            }
+
             return newState;
         }catch (Exception e){
             e.printStackTrace();
@@ -414,7 +420,11 @@ public class LocalDatabase {
     public void updateServer(JSONObject serverState, JSONObject enhancedNewState){
         JSONArray update_logs = createUpdateLogs(serverState, enhancedNewState, "/");
         ServerConnection sc = ServerConnection.getInstance();
-        sc.sendLogs(update_logs);
+        try {
+            sc.sendLogs(update_logs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean isUnique(String currentPath, String name, String type) {
